@@ -6,7 +6,7 @@ import re
 import feedparser
 
 
-SUBREDDIT = "shortscience_test"
+SUBREDDIT = "machinelearning"
 USERAGENT = "shortscience"
 SS_XML = "http://www.shortscience.org/rss-all.xml"
 SUBMISSIONLIMIT = 100
@@ -31,7 +31,7 @@ def getDate(submission):
 
 def checkSubmissions(subreddit, feed):
     for i in list(subreddit.new(limit=SUBMISSIONLIMIT)):
-        print i
+        print (i)
         if (containsLink(i.selftext) or containsLink(i.url)) \
                 and not isReplied(i.id) \
                 and (checkSS(getLinkIDs(i.selftext), feed) or checkSS(getLinkIDs(i.url), feed)):
@@ -40,7 +40,7 @@ def checkSubmissions(subreddit, feed):
 
 def checkComments(subreddit, feed):
     for i in list(subreddit.comments(limit=COMMENTLIMIT)):
-        print i
+        print (i)
         if containsLink(i.body) and not isReplied(i.id) and checkSS(getLinkIDs(i.body), feed):
             replyComment(i, feed)
 
@@ -101,7 +101,7 @@ def replyComment(post, feed):
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
-        print e
+        print (e)
         time.sleep(WAIT)
         pass
     else:
@@ -122,7 +122,7 @@ def replySubmission(post, feed):
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
-        print e
+        print (e)
         time.sleep(WAIT)
         pass
     else:
