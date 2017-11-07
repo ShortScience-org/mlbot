@@ -7,6 +7,7 @@ import feedparser
 
 
 SUBREDDIT = "machinelearning"
+#SUBREDDIT = "shortscience_test"
 USERAGENT = "shortscience"
 SS_XML = "http://www.shortscience.org/rss-all.xml"
 SUBMISSIONLIMIT = 100
@@ -31,19 +32,23 @@ def getDate(submission):
 
 def checkSubmissions(subreddit, feed):
     for i in list(subreddit.new(limit=SUBMISSIONLIMIT)):
-        print (i)
+        print (i, end='')
         if (containsLink(i.selftext) or containsLink(i.url)) \
                 and not isReplied(i.id) \
                 and (checkSS(getLinkIDs(i.selftext), feed) or checkSS(getLinkIDs(i.url), feed)):
+            print ("!!REPLY!!", end='')
             replySubmission(i, feed)
-
+        print (', ', end='')
+    print ("done checking Subissions")
 
 def checkComments(subreddit, feed):
     for i in list(subreddit.comments(limit=COMMENTLIMIT)):
-        print (i)
+        print (i, end='')
         if containsLink(i.body) and not isReplied(i.id) and checkSS(getLinkIDs(i.body), feed):
+            print ('!!Reply!!', end='')
             replyComment(i, feed)
-
+        print (', ', end='')
+    print ("done checking Comments")
 
 def checkSS(arxivids, feed):
     for i in arxivids:
@@ -57,7 +62,7 @@ def getSSLink(arxivid, feed):
     for i in feed.entries:
         if "shortscience_arxivid" in i:
             if i["shortscience_arxivid"] == arxivid:
-                return "http://www.shortscience.org/paper?bibtexKey=" + i["shortscience_bibtexkey"]
+                return "[[view more]](http://www.shortscience.org/paper?bibtexKey=" + i["shortscience_bibtexkey"] + ")"
     return None
 
 def containsLink(text):
@@ -96,8 +101,7 @@ def replyComment(post, feed):
         if i not in linkids and checkSS([i], feed):
             linkids.append(i)
     for i in linkids:
-        reply += "\n\n" + getSSLink(i, feed)
-        reply += "\n\n**Summary Preview:**\n\n" + getSummary(i, feed)
+        reply += "\n\n**Summary Preview:** \n\n" + getSummary(i, feed) + " " + getSSLink(i, feed)
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
@@ -117,8 +121,7 @@ def replySubmission(post, feed):
         if i not in linkids and checkSS([i], feed):
             linkids.append(i)
     for i in linkids:
-        reply += "\n\n" + getSSLink(i, feed)
-        reply += "\n\n**Summary Preview:**\n\n" + getSummary(i, feed)
+        reply += "\n\n**Summary Preview:** \n\n" + getSummary(i, feed) + " " + getSSLink(i, feed)
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
