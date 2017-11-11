@@ -75,13 +75,16 @@ def getLinkIDs(text):
 
 def getSummary(arxivid, feed):
     score = -1
+    title = ""
     summary = ""
     for i in feed.entries:
         if "shortscience_arxivid" in i:
             if i["shortscience_arxivid"] == arxivid and int(i["shortscience_votes"]) > score:
                 score = int(i["shortscience_votes"])
+                title = i["title"]
                 summary = i["summary"]
     summary = summary.replace("\n", "\n\n")
+    summary = "\n\n**" + title +"** \n\n" + summary
     return summary
 
 def isReplied(id):
@@ -101,7 +104,7 @@ def replyComment(post, feed):
         if i not in linkids and checkSS([i], feed):
             linkids.append(i)
     for i in linkids:
-        reply += "\n\n**Summary Preview:** \n\n" + getSummary(i, feed) + " " + getSSLink(i, feed)
+        reply += getSummary(i, feed) + " " + getSSLink(i, feed)
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
@@ -121,7 +124,7 @@ def replySubmission(post, feed):
         if i not in linkids and checkSS([i], feed):
             linkids.append(i)
     for i in linkids:
-        reply += "\n\n**Summary Preview:** \n\n" + getSummary(i, feed) + " " + getSSLink(i, feed)
+        reply += getSummary(i, feed) + " " + getSSLink(i, feed)
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
