@@ -76,15 +76,17 @@ def getLinkIDs(text):
 def getSummary(arxivid, feed):
     score = -1
     title = ""
+    author = ""
     summary = ""
     for i in feed.entries:
         if "shortscience_arxivid" in i:
             if i["shortscience_arxivid"] == arxivid and int(i["shortscience_votes"]) > score:
                 score = int(i["shortscience_votes"])
                 title = i["title"]
+                author = i["author"]
                 summary = i["summary"]
     summary = summary.replace("\n", "\n\n")
-    summary = "\n\n**" + title +"** \n\n" + summary
+    summary = "\n\n**" + title +"** \n\n*Summary by " + author + "*\n\n" + summary
     return summary
 
 def isReplied(id):
