@@ -13,7 +13,7 @@ SS_XML = "http://www.shortscience.org/rss-all.xml"
 SUBMISSIONLIMIT = 100
 COMMENTLIMIT = 100
 LINK = re.compile('arxiv\.org/abs/([0-9]+\.[0-9]+)')
-WAIT = 30
+WAIT = 100
 
 
 r = praw.Reddit(USERAGENT)
@@ -92,6 +92,7 @@ def getSummary(arxivid, feed):
 def isReplied(id):
     cursor.execute('SELECT * FROM replied WHERE ID=?', [id])
     if cursor.fetchone():
+        print("\nAlready replied!!!!!!!")
         return True
     return False
 
