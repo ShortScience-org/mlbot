@@ -7,12 +7,13 @@ import feedparser
 
 
 SUBREDDIT = "machinelearning"
+#SUBREDDIT = "shortscience_test"
 USERAGENT = "shortscience"
 SS_XML = "http://www.shortscience.org/rss-all.xml"
 SUBMISSIONLIMIT = 100
 COMMENTLIMIT = 100
 LINK = re.compile('arxiv\.org/abs/([0-9]+\.[0-9]+)')
-WAIT = 30
+WAIT = 100
 
 
 r = praw.Reddit(USERAGENT)
@@ -31,19 +32,23 @@ def getDate(submission):
 
 def checkSubmissions(subreddit, feed):
     for i in list(subreddit.new(limit=SUBMISSIONLIMIT)):
-        print (i)
+        print (i, end='')
         if (containsLink(i.selftext) or containsLink(i.url)) \
                 and not isReplied(i.id) \
                 and (checkSS(getLinkIDs(i.selftext), feed) or checkSS(getLinkIDs(i.url), feed)):
+            print ("!!REPLY!!", end='')
             replySubmission(i, feed)
-
+        print (', ', end='')
+    print ("done checking Subissions")
 
 def checkComments(subreddit, feed):
     for i in list(subreddit.comments(limit=COMMENTLIMIT)):
-        print (i)
+        print (i, end='')
         if containsLink(i.body) and not isReplied(i.id) and checkSS(getLinkIDs(i.body), feed):
+            print ('!!Reply!!', end='')
             replyComment(i, feed)
-
+        print (', ', end='')
+    print ("done checking Comments")
 
 def checkSS(arxivids, feed):
     for i in arxivids:
@@ -57,7 +62,7 @@ def getSSLink(arxivid, feed):
     for i in feed.entries:
         if "shortscience_arxivid" in i:
             if i["shortscience_arxivid"] == arxivid:
-                return "http://www.shortscience.org/paper?bibtexKey=" + i["shortscience_bibtexkey"]
+                return "[[view more]](http://www.shortscience.org/paper?bibtexKey=" + i["shortscience_bibtexkey"] + ")"
     return None
 
 def containsLink(text):
@@ -70,18 +75,24 @@ def getLinkIDs(text):
 
 def getSummary(arxivid, feed):
     score = -1
+    title = ""
+    author = ""
     summary = ""
     for i in feed.entries:
         if "shortscience_arxivid" in i:
             if i["shortscience_arxivid"] == arxivid and int(i["shortscience_votes"]) > score:
                 score = int(i["shortscience_votes"])
+                title = i["title"]
+                author = i["author"]
                 summary = i["summary"]
     summary = summary.replace("\n", "\n\n")
+    summary = "\n\n**" + title +"** \n\n*Summary by " + author + "*\n\n" + summary
     return summary
 
 def isReplied(id):
     cursor.execute('SELECT * FROM replied WHERE ID=?', [id])
     if cursor.fetchone():
+        print("\nAlready replied!!!!!!!")
         return True
     return False
 
@@ -96,8 +107,7 @@ def replyComment(post, feed):
         if i not in linkids and checkSS([i], feed):
             linkids.append(i)
     for i in linkids:
-        reply += "\n\n" + getSSLink(i, feed)
-        reply += "\n\n**Summary Preview:**\n\n" + getSummary(i, feed)
+        reply += getSummary(i, feed) + " " + getSSLink(i, feed)
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
@@ -117,8 +127,7 @@ def replySubmission(post, feed):
         if i not in linkids and checkSS([i], feed):
             linkids.append(i)
     for i in linkids:
-        reply += "\n\n" + getSSLink(i, feed)
-        reply += "\n\n**Summary Preview:**\n\n" + getSummary(i, feed)
+        reply += getSummary(i, feed) + " " + getSSLink(i, feed)
     try:
         post.reply(reply)
     except praw.exceptions.APIException as e:
